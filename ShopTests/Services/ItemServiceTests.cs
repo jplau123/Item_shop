@@ -57,13 +57,12 @@ public class ItemServiceTests
 
         var expectedItemId = 1;
 
-        var sendItem = It.Is<ItemEntity>(
-            item => 
-                    item.Name == request.Name &&
+        _itemRepositoryMock.Setup(repo => repo.Add(It.Is<ItemEntity>(
+            item => item.Name == request.Name &&
                     item.Price == request.Price &&
-                    item.Quantity == request.Quantity);
+                    item.Quantity == request.Quantity)))
+            .ReturnsAsync(expectedItemId);
 
-        _itemRepositoryMock.Setup(repo => repo.Add(sendItem)).ReturnsAsync(expectedItemId);
         _itemRepositoryMock.Setup(repo => repo.GetCountByName(request.Name)).ReturnsAsync(0);
 
         // Act
@@ -72,7 +71,10 @@ public class ItemServiceTests
         // Assert
         result.Should().Be(expectedItemId);
 
-        _itemRepositoryMock.Verify(repo => repo.Add(sendItem), Times.Once);
+        _itemRepositoryMock.Verify(repo => repo.Add(It.Is<ItemEntity>(
+            item => item.Name == request.Name &&
+                    item.Price == request.Price &&
+                    item.Quantity == request.Quantity)), Times.Once);
         _itemRepositoryMock.Verify(repo => repo.GetCountByName(request.Name), Times.Once);
     }
 
@@ -210,18 +212,20 @@ public class ItemServiceTests
             Quantity = 1
         };
 
-        var sendEntity = It.Is<ItemEntity>(
+        _itemRepositoryMock.Setup(repo => repo.Update(It.Is<ItemEntity>(
             item => item.Id == itemId &&
                     item.Name == itemEntity.Name &&
                     item.Price == itemEntity.Price &&
-                    item.Quantity == itemEntity.Quantity);
-
-        _itemRepositoryMock.Setup(repo => repo.Update(sendEntity)).ReturnsAsync(1);
+                    item.Quantity == itemEntity.Quantity))).ReturnsAsync(1);
 
         // Act
         await _itemService.Update(itemRequest, itemId);
 
-        _itemRepositoryMock.Verify(repo => repo.Update(sendEntity), Times.Once);
+        _itemRepositoryMock.Verify(repo => repo.Update(It.Is<ItemEntity>(
+            item => item.Id == itemId &&
+                    item.Name == itemEntity.Name &&
+                    item.Price == itemEntity.Price &&
+                    item.Quantity == itemEntity.Quantity)), Times.Once);
     }
 
     [Fact]
@@ -244,18 +248,21 @@ public class ItemServiceTests
             Quantity = 2
         };
 
-        var sendEntity = It.Is<ItemEntity>(
+        _itemRepositoryMock.Setup(repo => repo.Update(It.Is<ItemEntity>(
             item => item.Id == nonExistingItemId &&
                     item.Name == nonExistingItemEntity.Name &&
                     item.Price == nonExistingItemEntity.Price &&
-                    item.Quantity == nonExistingItemEntity.Quantity);
-
-        _itemRepositoryMock.Setup(repo => repo.Update(sendEntity)).ReturnsAsync(0);
+                    item.Quantity == nonExistingItemEntity.Quantity)))
+            .ReturnsAsync(0);
 
         // Act and Assert
         var act = () => _itemService.Update(itemRequest, nonExistingItemId);
         await act.Should().ThrowAsync<NotFoundException>();
 
-        _itemRepositoryMock.Verify(repo => repo.Update(sendEntity), Times.Once);
+        _itemRepositoryMock.Verify(repo => repo.Update(It.Is<ItemEntity>(
+            item => item.Id == nonExistingItemId &&
+                    item.Name == nonExistingItemEntity.Name &&
+                    item.Price == nonExistingItemEntity.Price &&
+                    item.Quantity == nonExistingItemEntity.Quantity)), Times.Once);
     }
 }
