@@ -117,7 +117,7 @@ public class ItemServiceTests
         // Assert
         await act.Should().ThrowAsync<NotFoundException>();
 
-        // Verify that Delete method was called with the correct parameter
+        // Verify
         _itemRepositoryMock.Verify(repo => repo.GetById(It.Is<int>(id => id == testId)), Times.Once);
     }
 
@@ -135,7 +135,7 @@ public class ItemServiceTests
         // Assert
         await act.Should().ThrowAsync<NotFoundException>();
 
-        // Verify that Delete method was called with the correct parameter
+        // Verify
         _itemRepositoryMock.Verify(repo => repo.GetById(It.Is<int>(id => id == testId)), Times.Once);
     }
 
@@ -143,15 +143,15 @@ public class ItemServiceTests
     public async Task Delete_ExistingItem_DeletesSuccessfully()
     {
         // Arrange
-        int itemId = 1;
+        int testId = 1;
 
-        _itemRepositoryMock.Setup(repo => repo.Delete(It.Is<int>(id => id == itemId))).ReturnsAsync(1);
+        _itemRepositoryMock.Setup(repo => repo.Delete(It.Is<int>(id => id == testId))).ReturnsAsync(1);
 
         // Act
-        await _itemService.Delete(itemId);
+        await _itemService.Delete(testId);
 
-        // Verify that Delete method was called with the correct parameter
-        _itemRepositoryMock.Verify(repo => repo.Delete(It.Is<int>(id => id == itemId)), Times.Once);
+        // Verify
+        _itemRepositoryMock.Verify(repo => repo.Delete(It.Is<int>(id => id == testId)), Times.Once);
     }
 
     [Fact]
@@ -174,6 +174,7 @@ public class ItemServiceTests
         result.Should().NotBeNull();
         result.Should().BeEquivalentTo(expectedItems);
 
+        // Verify
         _itemRepositoryMock.Verify(repo => repo.GetAll(), Times.Once);
     }
 
@@ -181,7 +182,7 @@ public class ItemServiceTests
     public async Task GetAll_ReturnsEmptyListWhenNoItems()
     {
         // Arrange
-        _itemRepositoryMock.Setup(repo => repo.GetAll()).ReturnsAsync(new List<ItemEntity>());
+        _itemRepositoryMock.Setup(repo => repo.GetAll()).ReturnsAsync([]);
 
         // Act
         var result = await _itemService.GetAll();
@@ -190,6 +191,7 @@ public class ItemServiceTests
         result.Should().NotBeNull();
         result.Should().BeEmpty();
 
+        // Verify
         _itemRepositoryMock.Verify(repo => repo.GetAll(), Times.Once);
     }
 
@@ -197,7 +199,7 @@ public class ItemServiceTests
     public async Task Update_ValidItem_UpdatesSuccessfully()
     {
         // Arrange
-        int itemId = 1;
+        int testId = 1;
 
         var itemRequest = new ItemRequest { 
             Name = "ExistingItem", 
@@ -206,26 +208,28 @@ public class ItemServiceTests
         };
 
         var itemEntity = new ItemEntity { 
-            Id = itemId, 
+            Id = testId, 
             Name = "ExistingItem", 
             Price = 1.0m, 
             Quantity = 1
         };
 
         _itemRepositoryMock.Setup(repo => repo.Update(It.Is<ItemEntity>(
-            item => item.Id == itemId &&
+            item => item.Id == testId &&
                     item.Name == itemEntity.Name &&
                     item.Price == itemEntity.Price &&
                     item.Quantity == itemEntity.Quantity))).ReturnsAsync(1);
 
         // Act
-        await _itemService.Update(itemRequest, itemId);
+        await _itemService.Update(itemRequest, testId);
 
+        // Verify
         _itemRepositoryMock.Verify(repo => repo.Update(It.Is<ItemEntity>(
-            item => item.Id == itemId &&
+            item => item.Id == testId &&
                     item.Name == itemEntity.Name &&
                     item.Price == itemEntity.Price &&
-                    item.Quantity == itemEntity.Quantity)), Times.Once);
+                    item.Quantity == itemEntity.Quantity)
+            ), Times.Once);
     }
 
     [Fact]
@@ -259,10 +263,12 @@ public class ItemServiceTests
         var act = () => _itemService.Update(itemRequest, nonExistingItemId);
         await act.Should().ThrowAsync<NotFoundException>();
 
+        // Verify
         _itemRepositoryMock.Verify(repo => repo.Update(It.Is<ItemEntity>(
             item => item.Id == nonExistingItemId &&
                     item.Name == nonExistingItemEntity.Name &&
                     item.Price == nonExistingItemEntity.Price &&
-                    item.Quantity == nonExistingItemEntity.Quantity)), Times.Once);
+                    item.Quantity == nonExistingItemEntity.Quantity)
+            ), Times.Once);
     }
 }
