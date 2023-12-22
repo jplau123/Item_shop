@@ -36,12 +36,12 @@ public class ItemServiceTests
             Quantity = 1,
         };
 
-        _itemRepositoryMock.Setup(repo => repo.GetCountByName(It.Is<string>(name => name == request.Name))).ReturnsAsync(1);
+        _itemRepositoryMock.Setup(repo => repo.GetCountByName(request.Name)).ReturnsAsync(1);
 
         // Act and Assert
         await Assert.ThrowsAsync<BadRequestException>(() => _itemService.Add(request));
 
-        _itemRepositoryMock.Verify(repo => repo.GetCountByName(It.Is<string>(name => name == request.Name)), Times.Once);
+        _itemRepositoryMock.Verify(repo => repo.GetCountByName(request.Name), Times.Once);
     }
 
     [Fact]
@@ -109,7 +109,7 @@ public class ItemServiceTests
         // Arrange
         int testId = 1000;
 
-        _itemRepositoryMock.Setup(repo => repo.GetById(It.Is<int>(id => id == testId))).ReturnsAsync((ItemEntity?)null);
+        _itemRepositoryMock.Setup(repo => repo.GetById(testId)).ReturnsAsync((ItemEntity?)null);
 
         // Act
         var act = () => _itemService.GetById(testId);
@@ -118,7 +118,7 @@ public class ItemServiceTests
         await act.Should().ThrowAsync<NotFoundException>();
 
         // Verify
-        _itemRepositoryMock.Verify(repo => repo.GetById(It.Is<int>(id => id == testId)), Times.Once);
+        _itemRepositoryMock.Verify(repo => repo.GetById(testId), Times.Once);
     }
 
     [Fact]
@@ -127,7 +127,7 @@ public class ItemServiceTests
         // Arrange
         int testId = 1000;
 
-        _itemRepositoryMock.Setup(repo => repo.Delete(It.Is<int>(id => id == testId))).ReturnsAsync(0);
+        _itemRepositoryMock.Setup(repo => repo.Delete(testId)).ReturnsAsync(0);
 
         // Act
         var act = () => _itemService.GetById(testId);
@@ -136,7 +136,7 @@ public class ItemServiceTests
         await act.Should().ThrowAsync<NotFoundException>();
 
         // Verify
-        _itemRepositoryMock.Verify(repo => repo.GetById(It.Is<int>(id => id == testId)), Times.Once);
+        _itemRepositoryMock.Verify(repo => repo.GetById(testId), Times.Once);
     }
 
     [Fact]
@@ -145,13 +145,13 @@ public class ItemServiceTests
         // Arrange
         int testId = 1;
 
-        _itemRepositoryMock.Setup(repo => repo.Delete(It.Is<int>(id => id == testId))).ReturnsAsync(1);
+        _itemRepositoryMock.Setup(repo => repo.Delete(testId)).ReturnsAsync(1);
 
         // Act
         await _itemService.Delete(testId);
 
         // Verify
-        _itemRepositoryMock.Verify(repo => repo.Delete(It.Is<int>(id => id == testId)), Times.Once);
+        _itemRepositoryMock.Verify(repo => repo.Delete(testId), Times.Once);
     }
 
     [Fact]
