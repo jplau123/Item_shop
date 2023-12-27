@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using ND_2023_12_19.Clients;
 using ND_2023_12_19.Contexts;
 using ND_2023_12_19.Interfaces;
 using ND_2023_12_19.Repositories;
@@ -23,10 +24,12 @@ builder.Services.AddDbContext<DataContext>(opt => opt.UseNpgsql(dbConnectonStrin
 builder.Services.AddScoped<IItemService, ItemService>();
 builder.Services.AddScoped<IShopService, ShopService>();
 builder.Services.AddScoped<IItemRepository, ItemRepositoryEfCore>();
+builder.Services.AddScoped<JsonPlaceholderClient>();
 
 builder.Services.AddTransient<ErrorMiddleware>();
 
 builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddHttpClient();
 
 var app = builder.Build();
 

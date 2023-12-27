@@ -1,4 +1,6 @@
 ﻿
+using AutoFixture;
+using AutoFixture.Xunit2;
 using AutoMapper;
 using FluentAssertions;
 using Moq;
@@ -15,6 +17,7 @@ public class ItemServiceTests
     private readonly Mock<IItemRepository> _itemRepositoryMock;
     private readonly IMapper _mapper;
     private readonly IItemService _itemService;
+    private readonly Fixture _fixture;
 
     public ItemServiceTests()
     {
@@ -24,18 +27,13 @@ public class ItemServiceTests
                 cfg => cfg.AddProfile<ND_2023_12_19.Profiles.AutoMapper>())
             );
         _itemService = new ItemService(_itemRepositoryMock.Object, _mapper);
+        _fixture = new Fixture();
     }
 
-    [Fact]
-    public async Task Add_DuplicateItem_ThrowsBadRequestException()
+    [Theory]
+    [AutoData]
+    public async Task Add_DuplicateItem_ThrowsBadRequestException(ItemRequest request)
     {
-        var request = new ItemRequest
-        {
-            Name = "TestItem",
-            Price = 1.0m,
-            Quantity = 1,
-        };
-
         _itemRepositoryMock.Setup(repo => repo.GetCountByName(request.Name)).ReturnsAsync(1);
 
         // Act and Assert
@@ -44,18 +42,11 @@ public class ItemServiceTests
         _itemRepositoryMock.Verify(repo => repo.GetCountByName(request.Name), Times.Once);
     }
 
-    [Fact]
-    public async Task Add_ValidItem_ReturnsItemId()
+    [Theory]
+    [AutoData]
+    public async Task Add_ValidItem_ReturnsItemId(ItemRequest request)
     {
-        // Arrange
-        var request = new ItemRequest
-        {
-            Name = "TestItem",
-            Price = 1.0m,
-            Quantity = 1,
-        };
-
-        var expectedItemId = 1;
+        var expectedItemId = _fixture.Create<int>();
 
         _itemRepositoryMock.Setup(repo => repo.Add(It.Is<ItemEntity>(
             item => item.Name == request.Name &&
@@ -82,15 +73,9 @@ public class ItemServiceTests
     public async Task GetById_GivenValidId_ReturnsItemEntity()
     {
         // Arrange
-        int testId = 1;
+        int testId = _fixture.Create<int>();
 
-        var expectedItemEntity = new ItemEntity
-        {
-            Id = testId,
-            Name = "TestItem",
-            Price = 1.0m,
-            Quantity = 1,
-        };
+        var expectedItemEntity = _fixture.Build<ItemEntity>().With(item => item.Id, testId).Create();
 
         _itemRepositoryMock.Setup(repo => repo.GetById(testId)).ReturnsAsync(expectedItemEntity);
 
@@ -107,7 +92,7 @@ public class ItemServiceTests
     public async Task GetById_GivenValidId_ThrowsNotFoundException()
     {
         // Arrange
-        int testId = 1000;
+        int testId = _fixture.Create<int>();
 
         _itemRepositoryMock.Setup(repo => repo.GetById(testId)).ReturnsAsync((ItemEntity?)null);
 
@@ -125,7 +110,7 @@ public class ItemServiceTests
     public async Task Delete_GivenValidId_ThrowsNotFoundException()
     {
         // Arrange
-        int testId = 1000;
+        int testId = _fixture.Create<int>();
 
         _itemRepositoryMock.Setup(repo => repo.Delete(testId)).ReturnsAsync(0);
 
@@ -143,7 +128,7 @@ public class ItemServiceTests
     public async Task Delete_ExistingItem_DeletesSuccessfully()
     {
         // Arrange
-        int testId = 1;
+        int testId = _fixture.Create<int>();
 
         _itemRepositoryMock.Setup(repo => repo.Delete(testId)).ReturnsAsync(1);
 
@@ -158,12 +143,7 @@ public class ItemServiceTests
     public async Task GetAll_ReturnsAllItems()
     {
         // Arrange
-        var expectedItems = new List<ItemEntity>
-        {
-            new ItemEntity { Id = 1, Name = "Item1", Price = 1.0m, Quantity = 0 },
-            new ItemEntity { Id = 2, Name = "Item2", Price = 5.5m, Quantity = 10 },
-            new ItemEntity { Id = 3, Name = "Item3", Price = 6.0m, Quantity = 5 }
-        };
+        List<ItemEntity> expectedItems = _fixture.CreateMany<ItemEntity>(count: 5).ToList();
 
         _itemRepositoryMock.Setup(repo => repo.GetAll()).ReturnsAsync(expectedItems);
 
@@ -199,20 +179,16 @@ public class ItemServiceTests
     public async Task Update_ValidItem_UpdatesSuccessfully()
     {
         // Arrange
-        int testId = 1;
+        int testId = _fixture.Create<int>();
 
-        var itemRequest = new ItemRequest { 
-            Name = "ExistingItem", 
-            Price = 1.0m,
-            Quantity = 1
-        };
+        var itemRequest = _fixture.Create<ItemRequest>();
 
-        var itemEntity = new ItemEntity { 
-            Id = testId, 
-            Name = "ExistingItem", 
-            Price = 1.0m, 
-            Quantity = 1
-        };
+        var itemEntity = _fixture.Build<ItemEntity>()
+            .With(item => item.Id, testId)
+            .With(item => item.Name, itemRequest.Name)
+            .With(item => item.Price, itemRequest.Price)
+            .With(item => item.Quantity, itemRequest.Quantity)
+            .Create();
 
         _itemRepositoryMock.Setup(repo => repo.Update(It.Is<ItemEntity>(
             item => item.Id == testId &&
@@ -236,39 +212,34 @@ public class ItemServiceTests
     public async Task Update_NonExistingItem_ThrowsNotFoundException()
     {
         // Arrange
-        int nonExistingItemId = 999;
+        int testId = _fixture.Create<int>();
 
-        var itemRequest = new ItemRequest { 
-            Name = "UpdatedItem", 
-            Price = 2.0m,
-            Quantity = 2 
-        };
+        var itemRequest = _fixture.Create<ItemRequest>();
 
-        var nonExistingItemEntity = new ItemEntity
-        {
-            Id = nonExistingItemId,
-            Name = "UpdatedItem",
-            Price = 2.0m,
-            Quantity = 2
-        };
+        var itemEntity = _fixture.Build<ItemEntity>()
+            .With(item => item.Id, testId)
+            .With(item => item.Name, itemRequest.Name)
+            .With(item => item.Price, itemRequest.Price)
+            .With(item => item.Quantity, itemRequest.Quantity)
+            .Create();
 
         _itemRepositoryMock.Setup(repo => repo.Update(It.Is<ItemEntity>(
-            item => item.Id == nonExistingItemId &&
-                    item.Name == nonExistingItemEntity.Name &&
-                    item.Price == nonExistingItemEntity.Price &&
-                    item.Quantity == nonExistingItemEntity.Quantity)))
+            item => item.Id == testId &&
+                    item.Name == itemEntity.Name &&
+                    item.Price == itemEntity.Price &&
+                    item.Quantity == itemEntity.Quantity)))
             .ReturnsAsync(0);
 
         // Act and Assert
-        var act = () => _itemService.Update(itemRequest, nonExistingItemId);
+        var act = () => _itemService.Update(itemRequest, testId);
         await act.Should().ThrowAsync<NotFoundException>();
 
         // Verify
         _itemRepositoryMock.Verify(repo => repo.Update(It.Is<ItemEntity>(
-            item => item.Id == nonExistingItemId &&
-                    item.Name == nonExistingItemEntity.Name &&
-                    item.Price == nonExistingItemEntity.Price &&
-                    item.Quantity == nonExistingItemEntity.Quantity)
+            item => item.Id == testId &&
+                    item.Name == itemEntity.Name &&
+                    item.Price == itemEntity.Price &&
+                    item.Quantity == itemEntity.Quantity)
             ), Times.Once);
     }
 }
