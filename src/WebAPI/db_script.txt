@@ -1,0 +1,25 @@
+CREATE TABLE shops (
+id serial PRIMARY KEY,
+	name VARCHAR(255) NOT NULL,
+	address VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE items (
+id serial PRIMARY KEY,
+	name VARCHAR(255) NOT NULL,
+	price decimal NOT NULL default 0,
+	quantity int NOT NULL default 0,
+	shop_id int REFERENCES shops(id)
+);
+
+CREATE TABLE users (
+	id serial PRIMARY KEY,
+	client_id int,
+	name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE orders (
+	id serial PRIMARY KEY,
+	user_id int references users(id),
+	item_id int references items(id)
+);
